@@ -11,7 +11,7 @@ class Bug(pygame.sprite.Sprite):
         except Exception as e:
             print(f"Erro ao carregar o sprite do Bug: {e}")
             self.image = pygame.Surface((50, 50))
-            self.image.fill((255, 0, 0)) 
+            self.image.fill((255, 0, 0))
             
         self.rect = self.image.get_rect()
         self.rect.x = 100
@@ -19,40 +19,42 @@ class Bug(pygame.sprite.Sprite):
         self.gravity = 0.6
         self.speed_y = 0
 
+        self._jump_sound = None
+        try:
+            self._jump_sound = pygame.mixer.Sound("asset/sounds/jump.wav")
+            self._jump_sound.set_volume(0.4)
+        except:
+            pass  # Som opcional; jogo continua sem ele
+
     def update(self):
         self.speed_y += self.gravity
         self.rect.y += int(self.speed_y)
 
     def jump(self):
         self.speed_y = -9
+        if self._jump_sound:
+            self._jump_sound.play()
 
 
 class Obstacle(pygame.sprite.Sprite):
-    def __init__(self, x_pos, y_pos, is_top, height):
+    def __init__(self, x_pos, y_pos, is_top, height, speed=5):
         super().__init__()
         
-        # --- FILTRAGEM DINÂMICA DA PASTA DE IMAGENS ---
         pasta_imagens = "asset/images"
         lista_obstaculos = []
         
-        # Lista de nomes de arquivos que NÃO devem ser usados como obstáculos
         arquivos_excluidos = ["bug.png", "Access_granted.png", "menu.png"]
-        # Adiciona os fundos '1.png' até '10.png' na lista de exclusão
         for i in range(1, 11):
             arquivos_excluidos.append(f"{i}.png")
             
         try:
-            # Varre todos os arquivos dentro da pasta asset/images
             for arquivo in os.listdir(pasta_imagens):
-                # Se for uma imagem PNG e não estiver na lista de exclusão, vira obstáculo!
                 if arquivo.lower().endswith('.png') and arquivo not in arquivos_excluidos:
                     lista_obstaculos.append(arquivo)
                     
-            # Escolhe uma imagem aleatória dentre os obstáculos válidos encontrados
             if lista_obstaculos:
                 img_nome = random.choice(lista_obstaculos)
             else:
-                # Caso a pasta esteja vazia de obstáculos, define um nome padrão seguro
                 img_nome = "cpuM6800.png"
                 
             self.image = pygame.image.load(f"asset/images/{img_nome}").convert_alpha()
@@ -61,7 +63,7 @@ class Obstacle(pygame.sprite.Sprite):
         except Exception as e:
             print(f"Erro ao carregar obstáculo dinâmico: {e}")
             self.image = pygame.Surface((70, height))
-            self.image.fill((0, 255, 0)) # Fallback seguro
+            self.image.fill((0, 255, 0))
         
         self.rect = self.image.get_rect()
         self.rect.x = x_pos
@@ -71,7 +73,7 @@ class Obstacle(pygame.sprite.Sprite):
         else:
             self.rect.bottom = y_pos
             
-        self.speed_x = 5
+        self.speed_x = speed
         self.passed = False
 
     def update(self):
